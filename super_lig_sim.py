@@ -1,19 +1,28 @@
 #super_lig_sim.py
 import tkinter as tk
+from tkinter import messagebox
 import random
 
-# 1. Takımlar ve Puan Durumu
+# 1. Takımlar ve "Logo" Emojileri
 takimlar = ["Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor"]
+logolar = {"Galatasaray": "🦁", "Fenerbahçe": "🐦", "Beşiktaş": "🦅", "Trabzonspor": "🌊"}
 puanlar = {takim: 0 for takim in takimlar}
+toplam_mac = 0
 
 def lig_maci_yap():
-    # Rastgele iki takım seç (aynı takım olmasın)
-    ev_sahibi, deplasman = random.sample(takimlar, 2)
+    global toplam_mac
     
+    # Sezon bittiyse yeni maç yaptırma
+    if toplam_mac >= 12:
+        sampiyonu_ilan_et()
+        return
+
+    ev_sahibi, deplasman = random.sample(takimlar, 2)
     ev_skor = random.randint(0, 4)
     dep_skor = random.randint(0, 4)
     
-    skor_metni = f"{ev_sahibi} {ev_skor} - {dep_skor} {deplasman}"
+    # Görsel skor (Logolarla birlikte)
+    skor_metni = f"{logolar[ev_sahibi]} {ev_sahibi} {ev_skor} - {dep_skor} {deplasman} {logolar[deplasman]}"
     sonuc_etiketi.config(text=skor_metni)
     
     # Puan Dağıtımı
@@ -25,35 +34,41 @@ def lig_maci_yap():
         puanlar[ev_sahibi] += 1
         puanlar[deplasman] += 1
     
+    toplam_mac += 1
     tabloyu_guncelle()
+    
+    # 12. maçtan sonra otomatik bitir
+    if toplam_mac == 12:
+        sampiyonu_ilan_et()
 
 def tabloyu_guncelle():
-    # Puanları yüksekten düşüğe sıralayalım (Biraz ileri seviye ama şık durur)
     sirali_liste = sorted(puanlar.items(), key=lambda x: x[1], reverse=True)
-    
-    tablo_metni = "🏆 PUAN DURUMU 🏆\n" + "-"*25 + "\n"
+    tablo_metni = "🏆 PUAN DURUMU 🏆\n" + "-"*30 + "\n"
     for takim, puan in sirali_liste:
-        tablo_metni += f"{takim}: {puan} Puan\n"
-    
+        tablo_metni += f"{logolar[takim]} {takim}: {puan} Puan\n"
     tablo_etiketi.config(text=tablo_metni)
 
-# Görsel Arayüz
+def sampiyonu_ilan_et():
+    sirali = sorted(puanlar.items(), key=lambda x: x[1], reverse=True)
+    sampiyon = sirali[0][0]
+    puan = sirali[0][1]
+    messagebox.showinfo("Sezon Bitti!", f"TEBRİKLER!\n\n{logolar[sampiyon]} {sampiyon} {puan} puanla ŞAMPİYON OLDU!")
+
+# Arayüz Ayarları
 pencere = tk.Tk()
-pencere.title("4 Takımlı Süper Lig")
-pencere.geometry("400x500")
+pencere.title("Süper Lig Sezon Simülatörü")
+pencere.geometry("450x550")
 
-tk.Label(pencere, text="⚽ Mini Lig Simülatörü", font=("Arial", 16, "bold")).pack(pady=10)
+tk.Label(pencere, text="⚽ Pro Lig Yönetimi", font=("Arial", 18, "bold"), fg="darkgreen").pack(pady=10)
 
-tablo_etiketi = tk.Label(pencere, text="Puanlar yükleniyor...", font=("Courier", 12), justify="left", bg="lightgrey", width=30)
+tablo_etiketi = tk.Label(pencere, text="", font=("Courier", 12, "bold"), justify="left", bg="#f0f0f0", width=35, relief="ridge")
 tablo_etiketi.pack(pady=10)
 
-buton = tk.Button(pencere, text="Yeni Maç Oynat", command=lig_maci_yap, font=("Arial", 12, "bold"), bg="blue", fg="white")
+buton = tk.Button(pencere, text="Haftanın Maçını Oynat", command=lig_maci_yap, font=("Arial", 12, "bold"), bg="blue", fg="white", height=2)
 buton.pack(pady=20)
 
-sonuc_etiketi = tk.Label(pencere, text="Haftanın maçını başlatın!", font=("Arial", 13, "italic"))
+sonuc_etiketi = tk.Label(pencere, text="Sezonu başlatmak için butona basın!", font=("Arial", 11, "italic"))
 sonuc_etiketi.pack(pady=10)
 
-# İlk açılışta tabloyu bir kez göster
 tabloyu_guncelle()
-
 pencere.mainloop()
